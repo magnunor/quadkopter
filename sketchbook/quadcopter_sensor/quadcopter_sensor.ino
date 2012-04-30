@@ -1,7 +1,8 @@
 // A simple data logger for the Arduino analog pins
-#define LOG_INTERVAL  200 // mills between entries
+#define LOG_INTERVAL  100 // mills between entries
 #define ECHO_TO_SERIAL   0 // echo data to serial port
 #define WAIT_TO_START    0 // Wait for serial input in setup()
+#define RESET_TIME  0 // If the datalogger clock should be reset to system time
 
 // the digital pins that connect to the LEDs
 #define redLEDpin 1
@@ -92,6 +93,19 @@ void setup()
 #endif  //ECHO_TO_SERIAL
   }
   
+#if RESET_TIME 
+  RTC.adjust(DateTime(__DATE__, __TIME__));
+#endif
+
+  DateTime starttime = RTC.now();
+  logfile.print("Start unixtime: ");
+  logfile.println(starttime.unixtime());
+
+#if ECHO_TO_SERIAL 
+  Serial.print("Start unixtime: ");
+  Serial.println(starttime.unixtime());
+#endif
+    
   logfile.println("millis \t Ax \t Ay \t Az \t T \t P");    
 #if ECHO_TO_SERIAL
   Serial.println("millis \t Ax \t Ay \t Az \t T \t P");
@@ -141,7 +155,6 @@ void loop(void)
   // print a tab between values:
   Serial.print("\t");
   Serial.print(analogRead(zpin));
-  Serial.println();
 #endif
 
   logfile.print("\t");
@@ -150,12 +163,10 @@ void loop(void)
   logfile.print(bmp.readPressure());
   logfile.println();
 #if ECHO_TO_SERIAL  
-  Serial.print("Temperature = ");
+  Serial.print("\t");
   Serial.print(bmp.readTemperature());
-  Serial.println(" *C"); 
-  Serial.print("Pressure = ");
+  Serial.print("\t");
   Serial.print(bmp.readPressure());
-  Serial.println(" Pa");
   Serial.println();
 #endif
 
